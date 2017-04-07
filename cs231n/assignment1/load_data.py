@@ -16,24 +16,35 @@
 import pickle
 import os
 import numpy as np
+#
+# def load_CIFAR_batch(filename):
+#     """
+#     Load dataset from given file in batch way
+#     :param filename:
+#     :return: train data as array, label array
+#     """
+#     with open(filename, 'r') as ifs:
+#         print(filename)
+#         dataDict = pickle.load(ifs)
+#
+#         # extract samples and it's label
+#         sampleX = dataDict['data']
+#         labelY = dataDict['label']
+#
+#         # convertion
+#         sampleX = sampleX.reshape(10000,3, 32, 32).transpose(0, 2, 3, 1).astype("float")
+#         labelY = np.array(labelY)
+#     return sampleX, labelY
 
 def load_CIFAR_batch(filename):
-    """
-    Load dataset from given file in batch way
-    :param filename:
-    :return: train data as array, label array
-    """
-    with open(filename, 'r') as ifs:
-        dataDict = pickle.load(ifs)
-
-        # extract samples and it's label
-        sampleX = dataDict['data']
-        labelY = dataDict['label']
-
-        # convertion
-        sampleX = sampleX.reshape(10000,3, 32, 32).transpose(0, 2, 3, 1).astype("float")
-        labelY = np.array(labelY)
-    return sampleX, labelY
+  """ load single batch of cifar """
+  with open(filename, 'rb') as f:
+    datadict = pickle.load(f, encoding='latin1')
+    X = datadict['data']
+    Y = datadict['labels']
+    X = X.reshape(10000, 3, 32, 32).transpose(0,2,3,1).astype("float")
+    Y = np.array(Y)
+    return X, Y
 
 
 def load_CIFAR10(path):
@@ -58,9 +69,6 @@ def load_CIFAR10(path):
         Ytr = np.concatenate(labelList)
     del x, y
     print("Training data loaded, total size : %d", len(Xtr))
-
     # load test data
-    Xte, Yte = load_CIFAR_batch(os.path.join(path, 'test_bach'))
-
-
+    Xte, Yte = load_CIFAR_batch(os.path.join(path, 'test_batch'))
     return Xtr, Ytr, Xte, Yte
