@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # Author  : Jerry.Shi
 # File    : k_nearest_neighbor.py
-# PythonVerion: python3.5
+# PythonVersion: python3.5
 # Date    : 2017/4/7 10:11
 # Software: PyCharm Community Edition
 

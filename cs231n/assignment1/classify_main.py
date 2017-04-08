@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Author  : Jerry.Shi
 # File    : classify_main.py
-# PythonVerion: python3.5
+# PythonVersion: python3.5
 # Date    : 2017/4/7 14:23
 # Software: PyCharm Community Edition
 
