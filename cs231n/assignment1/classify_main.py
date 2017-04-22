@@ -17,6 +17,7 @@ from load_data  import  *
 from k_nearest_neighbor import *
 from linear_svm import *
 from gradient_check import *
+from linear_classifier import *
 
 
 def KNN(data_path):
@@ -111,7 +112,7 @@ def svm_classifier(dataset):
             plt.axis('off')
             if i == 0:
                 plt.title(cls)
-    plt.show()
+    # plt.show()
 
     # step 3,preprocessing, subsampling
     num_training = 49000
@@ -175,15 +176,48 @@ def svm_classifier(dataset):
     # step 6, classify
     # generate a random svm weight of small numbers
     W = np.random.randn(num_classes, X_train.shape[0]) * 0.0001
+
+    # coumpute time cost
+    time1 = time.time()
     loss, grad = svm_loss_naive(W, X_train, y_train, 0.00001)
-
-    print("SVM naive training completed, loss: ", loss)
-
+    time2 = time.time()
+    print("SVM naive training completed, loss: %f, computed in %fs" %  (loss, time2 - time1))
     # gradient check
     f = lambda w: svm_loss_naive(w, X_train, y_train, 0.0)[0]
     grad_numerical = grad_check_sparse(f, W, grad, 10)
-    # print(grad_numerical)
 
+    # vectorized svm model train
+    time1 = time.time()
+    loss_vectorized, grad_vectorized= svm_loss_vectorized(W, X_train, y_train, 0.00001)
+    time2 = time.time()
+    print("vectorized loss: %f computed in %fs" % (loss_vectorized, time2 - time1))
+    print("difference %f " % (loss_vectorized - loss))
+
+    # difference
+    difference = np.linalg.norm(grad - grad_vectorized, ord='fro')
+    print("difference between two: %f" % (difference))
+
+    #===================
+    # a completed ML system include model train and predict
+    # SGD
+    svm = LinearSVM()
+    start_time = time.time()
+    loss_hist = svm.train(X_train, y_train, learning_rate=1e-7, reg=5e4, num_iters=1500, verbose=True)
+    end_time = time.time()
+    print("completd model train in %fs" % (end_time - start_time))
+
+    # plot loss
+    plt.plot(loss_hist)
+    plt.xlabel("Iteration number")
+    plt.ylabel("Loss value")
+    plt.show()
+
+    # Write the LinearSVM.predict function and evaluate the performance on both the
+    # training and validation set
+    y_train_pred = svm.predict(X_train)
+    print ("training accuracy: %f" % (np.mean(y_train == y_train_pred)))
+    y_val_pred = svm.predict(X_val)
+    print("validation accuacy: %f" % (np.mean(y_val == y_val_pred)))
 
 if __name__ == "__main__":
     dataSet = "D:\\data\\corpus\\cifar-10-batches-py"
@@ -194,7 +228,8 @@ if __name__ == "__main__":
     # print("Finshed Knn classification time cost: %0.3fs" % (end_time-start_time))
 
     # linear svm
-    start_time = time.time()
+    # start_time = time.time()
     svm_classifier(dataSet)
-    end_time = time.time()
+    # end_time = time.time()
     # print("Finshed Knn classification time cost: %0.3fs" % (end_time-start_time))
+

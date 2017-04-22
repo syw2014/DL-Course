@@ -57,7 +57,7 @@ class LinearClassifier:
             # replacement is faster than sampling without replacement.
             idx = np.random.choice(num_train, batch_size, replace=True)
             X_batch = X[:, idx]
-            y_batch = y[:, idx]
+            y_batch = y[idx]
 
             # compute loss and gradient
             loss , grad = self.loss(X_batch, y_batch, reg)
@@ -70,7 +70,7 @@ class LinearClassifier:
 
             # whether to print infos for current iterator training
             if verbose and iters % 100 == 0:
-                print("iteration %d / %d , loss is %f") % (iters, num_iters, loss)
+                print("iteration %d / %d , loss is %f" % (iters, num_iters, loss))
 
         return loss_history
 

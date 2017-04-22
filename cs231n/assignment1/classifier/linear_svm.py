@@ -74,7 +74,7 @@ def svm_loss_vectorized(W, X, y, reg):
     # step 1, create store variable
     # store the training loss in variable loss
     loss = 0.0
-    dW = np.zeors(W.shape)   # gradient matrix
+    dW = np.zeros(W.shape)   # gradient matrix
 
     # step 2, get use info for model
     D = X.shape[0]    # sample dimension
@@ -98,7 +98,7 @@ def svm_loss_vectorized(W, X, y, reg):
     mat[y, np.arange(num_train)] = 0  # accounting for the j=y_i term we shouldn't count (subtracting 1 makes up for it since w_j = w_{y_j} in this case)
 
     # step 6, compute maximum
-    thresh = np.maximum(np.zeros(num_classes, num_train), mat)
+    thresh = np.maximum(np.zeros((num_classes, num_train)), mat)
 
     # step 7, compute training loss
     loss = np.sum(thresh)
