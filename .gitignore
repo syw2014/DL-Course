@@ -1,0 +1,5 @@
+*.pyc
+.idea/
+data/*
+/cs244n/doc/*
+!/cs244n/doc/assignment1.tex
