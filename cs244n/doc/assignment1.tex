@@ -1,6 +1,7 @@
 % -*- coding: UTF-8 -*-
 \documentclass[twoside,nofonts,fancyhdr,openany,UTF8]{ctexart} % 设置文章类型
 \usepackage{CJK}
+\usepackage{amsmath}
 
 \usepackage[colorlinks,linkcolor=red]{hyperref}  % 添加链接的宏包
 
@@ -15,7 +16,27 @@
 
 \begin{document}	% 正文开始
 
-\maketitle			% 制作封面
+%\maketitle			% 制作封面
 
 %\tableofcontents % 加入目录，包括页码
+
+\section{Softmax}
+\subsection{a}
+证明softmax函数对于任意的向量\textbf{\emph{x}} 和任意常数\emph{c}存在以下关系，
+\begin{equation}
+softmax(\textbf{\emph{x}}) = softmax(\textbf{\emph{x}} + \emph{c})
+\end{equation}
+上式表示对向量的每个维度同时加上同一个常数softmax的结果不变，softmax公式如下，
+\begin{equation}
+softmax(\textbf{\emph{x}})_i = \frac{exp(\emph{x}_i)}{\sum_{j}exp(\emph{x}_j)}
+\end{equation}
+
+Solution:
+softmax(\text)
+
+\subsection{b}
+
+
+
+
 \end{document}
