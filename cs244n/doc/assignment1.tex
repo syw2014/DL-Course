@@ -1,7 +1,8 @@
 % -*- coding: UTF-8 -*-
-\documentclass[twoside,nofonts,fancyhdr,openany,UTF8]{ctexart} % 设置文章类型
+\documentclass[twoside,nofonts,fancyhdr,openany,UTF8,fleqn]{ctexart} % 设置文章类型
 \usepackage{CJK}
 \usepackage{amsmath}
+\usepackage{amssymb}
 
 \usepackage[colorlinks,linkcolor=red]{hyperref}  % 添加链接的宏包
 
@@ -30,11 +31,51 @@ softmax(\textbf{\emph{x}}) = softmax(\textbf{\emph{x}} + \emph{c})
 \begin{equation}
 softmax(\textbf{\emph{x}})_i = \frac{exp(\emph{x}_i)}{\sum_{j}exp(\emph{x}_j)}
 \end{equation}
+一般情况下为了保持数值稳定性会选择$\textbf{c}=-\textbf{max}(\textbf{\emph{x}}_i)$, 让每个维度都减去最大的那个元素，进行稳定性处理。
 
 Solution:
-softmax(\text)
+根据softmax的公式得到，
+% 推导过程
+
+\begin{align}
+softmax(\textbf{\emph{x}+c})  & =  \frac{exp(\textbf{x}_i + \textbf{c})}{\sum_{j}exp(\emph{x}_j+\textbf{c})} \\
+								  & =  \frac{exp(\textbf{x}_i)exp(\textbf{c})}{\sum_{j}exp(\emph{x}_j)exp(\textbf{c})}	\\
+								  & = \frac{exp(\textbf{x}_i)}{\sum_{j}(exp(\emph{x}_))}	\\
+								  & = softmax(\textbf{\emph{x}}) 
+\end{align} % 这里不要有空行否则会出错
 
 \subsection{b}
+给定一个\textbf{N}x\textbf{D}的矩阵，使用题目a中的特性求解矩阵中每一行的softmax结果，在文件q1softmax.py中给出实现和测试。
+
+
+
+\section{Neural Network Basics}
+\subsection{a}
+推导sigmod函数的梯度，并将其表示成其他函数的形式，sigmod函数如下，
+\begin{equation}
+ \sigma(\textbf{x}) = \frac{1}{1+exp(-\textbf{x})} 
+\end{equation}
+Solutions:
+\begin{align}
+\sigma^\prime(\textbf{x})  & = \frac{exp(-\textbf{x})}{(1+exp(-\textbf{x}))^2} \\
+		& = \frac{1}{1+exp(-\textbf{x})}\frac{exp(x)}{1+exp(-\textbf{x})} \\
+	& = \frac{1}{1+exp(-\textbf{x})}(1- \frac{1}{1+exp(-\textbf{x})})	\\
+	& = \sigma(\textbf{x})(1-\sigma(x))
+\end{align}
+
+\subsection{b} 
+推导激活函数为softmax,loss 为 cross entropy的梯度,输入向量$\theta$,预测结果$\hat{\textbf{\emph{y}}}=softmax(\theta)$,交叉熵cross entropy公式为，
+\begin{equation}
+CE(\textbf{\emph{y}}, \hat{\textbf{\emph{y}}}) = - \sum_{i}y_ilog(\hat{y}_i)
+\end{equation}
+
+其中向量\textbf{\emph{y}}为one-hot编码，$\hat{\textbf{\emph{y}}}$是对所有class的预测概率向量。
+
+Solution:
+对$\theta$求导
+
+
+
 
 
 
