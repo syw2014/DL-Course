@@ -7,7 +7,6 @@ Tabel of Contents
     * [cs244n](#cs244n)
     * [cs231n](#cs231n)
     * [Deep Learning Practice](#deep-learning-practice)
-    * [Perpose](#perpose)
 
 
 
@@ -20,3 +19,4 @@ This course is a deep dive into details of the deep learning architectures with 
 detail introduction at [here](http://cs231n.stanford.edu/)
  
 ## 3. Deep Learning Practice
+ Here I also record the models and practice with tensorflow.
