@@ -29,18 +29,22 @@ num_sample = x.shape[0]
 
 pred = tf.matmul(x, W) + b
 loss = tf.reduce_sum(tf.square(pred - y)) / (2*batch_size)
-train_op = tf.train.AdamOptimizer(0.0005).minimize(loss)
+train_op = tf.train.AdamOptimizer(0.005).minimize(loss)
 
 init = tf.global_variables_initializer()
 with tf.Session() as sess:
     sess.run(init)
-    for i in range(1000):
+    mim_loss = 1000.0
+    for i in range(50000):
         for batch in train_data.iter_batch(shuffle=True):
             xx, yy = batch
             _, lo , ww= sess.run([train_op, loss, W], feed_dict={x: np.asarray(xx), y: np.asarray(yy)})
-            print("epoch:{} batch loss: {}".format(i, lo))
+            print("epoch:{} batch loss: {:.3f}".format(i, lo))
+            if lo < mim_loss:
+                mim_loss = lo
         # evaluate
         #    if i % 5 == 0:
         #        print("weith:{}".format(ww))
+    print("minimum loss: {:.3f}".format(mim_loss))
 # step3, train model
 # step4, evaluate
