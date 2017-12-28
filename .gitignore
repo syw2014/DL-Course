@@ -2,6 +2,7 @@
 .idea/
 data/*
 !data/download.sh
-/cs244n/doc/*
-!/cs244n/doc/*.tex
-!/cs244n/doc/images
+/course/cs244n/doc/*
+!/course/cs244n/doc/*.tex
+!/course/cs244n/doc/images
+/cs244n/
