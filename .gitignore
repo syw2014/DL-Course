@@ -1,6 +1,7 @@
 *.pyc
 .idea/
 data/*
+!data/download.sh
 /cs244n/doc/*
 !/cs244n/doc/*.tex
 !/cs244n/doc/images
