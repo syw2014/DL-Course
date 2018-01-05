@@ -3,14 +3,15 @@
 \usepackage{CJK}
 \usepackage{amsmath}
 \usepackage{amssymb}
-
+\usepackage{graphicx}				% 调用插图宏包
 \usepackage[colorlinks,linkcolor=red]{hyperref}  % 添加链接的宏包
-
+\pagestyle{empty}					% 无页眉页脚格式
 
 % 设置字体
 \setCJKmainfont[AutoFakeBold=true]{Adobe Song Std} 
 \setCJKsansfont{Adobe Heiti Std}
 \setCJKmonofont{Adobe FangSong Std}
+\graphicspath{ {images/} }		% 指定图片路径
 
 \title{CS24N Assignment1}    	% 标题
 \author{Jerry.Shi}		% 作者
@@ -33,7 +34,7 @@ softmax(\textbf{\emph{x}})_i = \frac{exp(\emph{x}_i)}{\sum_{j}exp(\emph{x}_j)}
 \end{equation}
 一般情况下为了保持数值稳定性会选择$\textbf{c}=-\textbf{max}(\textbf{\emph{x}}_i)$, 让每个维度都减去最大的那个元素，进行稳定性处理。
 
-Solution:
+\textbf{Soultion}:
 根据softmax的公式得到，
 % 推导过程
 
@@ -48,14 +49,15 @@ softmax(\textbf{\emph{x}+c})  & =  \frac{exp(\textbf{x}_i + \textbf{c})}{\sum_{j
 给定一个\textbf{N}x\textbf{D}的矩阵，使用题目a中的特性求解矩阵中每一行的softmax结果，在文件q1softmax.py中给出实现和测试。
 
 
-
+% 第二节
 \section{Neural Network Basics}
+% a
 \subsection{a}
 推导sigmod函数的梯度，并将其表示成其他函数的形式，sigmod函数如下，
 \begin{equation}
  \sigma(\textbf{x}) = \frac{1}{1+exp(-\textbf{x})} 
 \end{equation}
-Solutions:
+\textbf{Soultion}:
 \begin{align}
 \sigma^\prime(\textbf{x})  & = \frac{exp(-\textbf{x})}{(1+exp(-\textbf{x}))^2} \\
 		& = \frac{1}{1+exp(-\textbf{x})}\frac{exp(x)}{1+exp(-\textbf{x})} \\
@@ -63,21 +65,93 @@ Solutions:
 	& = \sigma(\textbf{x})(1-\sigma(x))
 \end{align}
 
+% b
 \subsection{b} 
-推导激活函数为softmax,loss 为 cross entropy的梯度,输入向量$\theta$,预测结果$\hat{\textbf{\emph{y}}}=softmax(\theta)$,交叉熵cross entropy公式为，
+推导激活函数为softmax,loss 为 cross entropy的情况下,输入向量$\theta$,求loss对输入$\theta$的梯度。预测结果$\hat{\textbf{\emph{y}}}=softmax(\theta)$,交叉熵cross entropy公式为，
 \begin{equation}
 CE(\textbf{\emph{y}}, \hat{\textbf{\emph{y}}}) = - \sum_{i}y_ilog(\hat{y}_i)
 \end{equation}
 
 其中向量\textbf{\emph{y}}为one-hot编码，$\hat{\textbf{\emph{y}}}$是对所有class的预测概率向量。
 
-Solution:
+\textbf{Soultion}:
 对$\theta$求导
+首先根据softmax函数定义，
+\begin{equation}
+\widehat{y_i} = softmax(\theta_{i}) = \frac{exp(\theta_{i})}{\sum_{k=1}{exp(\theta_{k})}} = \frac{u_i}{v_i}=f_i
+\end{equation}
+把$f_i$当成是两个函数$u_i$和$v_i$复合结果，在当前情况下i可以理解为y中第i个元素的预测结果。下面推导$f_i$对$\theta_j$的求导。
+\begin{equation}
+\frac{\partial{f_i}}{\partial{\theta_j}} = \frac{u_{i}^{\prime}v_j-u_{i}v_{i}^{\prime}}{(v_i)^2}
+\end{equation}
 
+此时不能直接进行计算求导，因为不清楚i和j是否相等，因此需要分情况考虑。
+当\textbf{i=j}时，此时由
+\begin{equation}
+u_{i}^{\prime}=\frac{\partial{u_i}}{\partial{\theta_j}}=exp(\theta_i) \\
+v_{i}^{\prime}=\frac{\partial{v_i}}{\partial{\theta_j}}=exp(\theta_j)	\\
+\end{equation}
+将结果代入求导结果
+\begin{align}
+\frac{\partial{f_i}}{\partial{\theta_j}} 		\\
+	& = \frac{u_{i}^{\prime}v_j-u_{i}v_{i}^{\prime}}{(v_i)^2} \\
+	& = \frac{exp(\theta_i)\sum_{k=1}{exp(\theta_k)}-exp(\theta_i)exp(\theta_j)}{\sum_{k=1}{exp(\theta_k)}\sum_{k=1}{exp(\theta_k)}}	\\
+& = \frac{exp(\theta_i)}{\sum_{k=1}{exp(\theta_k)}}\frac{\sum_{k=1}{exp(\theta_k)}-exp(\theta_j)}{\sum_{k=1}{exp(\theta_k)}} \\
+& = f_i(1-f_j) \\
+& = f_i(1-f_i)
+\end{align}
 
+当\textbf{i!=j}时，结果为
+\begin{equation}
+u_{i}^{\prime}=\frac{\partial{u_i}}{\partial{\theta_j}}=0 \\
+v_{i}^{\prime}=\frac{\partial{v_i}}{\partial{\theta_j}}=exp(\theta_j)	\\
+\end{equation}
+将结果代入可得
 
+\begin{align}
+\frac{\partial{f_i}}{\partial{\theta_j}} = \frac{0-u_{i}v_{i}^{\prime}}{(v_i)^2}	\\
+& = - \frac{exp(\theta_i)}{\sum_{k=1}{exp(\theta_k)}}\frac{exp(\theta_j)}{\sum_{k=1}{exp(\theta_k)}}	\\
+& = -f_{i}f_j
+\end{align}
 
+结合以上求导结果求交叉熵对$\theta_i$的梯度
+\begin{align}
+\frac{\partial{CE(y_k,\widehat{y_k})}}{\partial{\theta_i}} \\
+	& = -\frac{\partial{\sum_{k=1}{y_klog(\widehat{y_k})}}}{\partial{\theta_i}} \\
+	& = -\sum_{k=1}y_{k}\frac{1}{f_k}\frac{\partial{f_k}}{\partial{\theta_i}} \\
+	& = -y_i(1-f_i)-\sum_{k\neq{i}}y_{k}\frac{1}{f_k}(-f_{k}f_{i})	\\
+	& = -y_i + y_{i}f_{i}+\sum_{k\neq{i}}y_{k}f_{i}	\\
+	& = -y_i + \sum_{k=1}y_{k}f_{i}	\\
+	& = \widehat{y_i} - y_i
+\end{align}
+在推导过程中主要考虑k和i相等、不相等两种情况。
 
+% c
+\subsection{c}
+对三层网络如图，推导误差对输入梯度$\frac{\partial{J}}{\partial{x}}$,$J=CE(y,\widehat{y})$。
+隐藏层采用sigmod作为激活函数，输出层采用softmax作为，y采用one-hot编码。可用公式如下，
+$$h = sigmod(xW_1 + b_1) \\ \widehat{y} = softmax(hW_2 + b_2)$$
+% image
+\begin{figure}[!htb]
+\includegraphics[scale=0.5]{assign_1}
+\centering
+\caption{}
+\end{figure}
+
+\textbf{Soultion}:
+根据误差反向传播算法，误差对输入x的导数，等于从输出到输入反向情况下，所有节点的输出对输入导数的累乘。做如下定义，
+$z_1 = W_1x + b_1 \\ \widehat{y}=W_2h + b_2 \\ h = sigmod(z_1)=\sigma(z_1)$
+则误差对输入的导数为，
+\begin{align}
+\frac{\partial{CE}}{\partial{x}} = \frac{\partial{CE}}{\partial{\widehat{y}}}\frac{\partial{\widehat{y}}}{\partial{h}}\frac{\partial{h}}{\partial{z_1}}\frac{\partial{z_1}}{\partial{x}} \\ 
+	& = (\widehat{y}-y)W_{2}^{T}\circ\sigma^{\prime}(z_1)W_{1}^{T}
+\end{align}
+
+\subsection{d}
+如果输入是$D_x$维向量，隐藏层单元数为H，计算该网络所需要的参数数量。
+\textbf{Solution}:
+由于输入x到隐藏层是全连接，每个维度都与H个单元向量相连，且都有bias存在，因此有$(D_x + 1)\times H$个参数，同理，隐藏层与$D_x$个输出单元相连，再加上bias有$(H + 1)\times D_x$,因此该网络总共有参数，$(D_x +1)\times H + (H+1)\times D_y$
+\subsection{e,f,g属于编程实现}
 
 
 \end{document}
