@@ -153,5 +153,62 @@ $z_1 = W_1x + b_1 \\ \widehat{y}=W_2h + b_2 \\ h = sigmod(z_1)=\sigma(z_1)$
 由于输入x到隐藏层是全连接，每个维度都与H个单元向量相连，且都有bias存在，因此有$(D_x + 1)\times H$个参数，同理，隐藏层与$D_x$个输出单元相连，再加上bias有$(H + 1)\times D_x$,因此该网络总共有参数，$(D_x +1)\times H + (H+1)\times D_y$
 \subsection{e,f,g属于编程实现}
 
+% 3
+\section{word2vec}
+% 3.a
+\subsection{a}
+基于word2vec中skipgram 模型，给定中心词word c的预测结果$v_c$，输出采用softmax，误差采用cross entropy，求误差对$v_c$的梯度。
+\textbf{Solution}:
+设$y$和$\widehat{y}$均是列向量。
+\begin{align}
+J = CE \\ 
+& = -{y_i}log(\widehat{y_i}) \\
+& = -log(\frac{exp(u_o^Tv_c)}{\sum_{w=1}^{T}exp(u_w^Tv_c)}) \\
+& = -u_o^Tv_c + log({\sum_{w=1}^{|W|}exp(u_w^Tv_c)})
+\end{align}
+
+误差对输入的梯度：
+\begin{align}
+\frac{\partial{CE}}{\partial{v_c}}  \\
+& = -u_o + \frac{1}{\sum_{w=1}^{T}exp(u_w^Tv_c)}\frac{\partial}{\partial{v_c}}{\sum_{i=1}^{T}exp(u_i^Tv_c)} \\
+& = -u_o + \sum_{i=1}^{W}\frac{exp(u_i^Tv_c)}{\sum_{w=1}^{W}exp(u_w^Tv_c)}u_i \\
+& = -u_o + \sum_{i=1}^{W}\widehat{y_i}u_i
+\end{align}
+
+% 3.b
+\subsection{b}
+根据上个题目的情况，对$u_w$求梯度(包括$u_o$).
+\begin{align}
+J = CE \\ 
+& = -{y_i}log(\widehat{y_i}) \\
+& = -log(\frac{exp(u_o^Tv_c)}{\sum_{w=1}^{T}exp(u_w^Tv_c)}) \\
+& = -u_o^Tv_c + log({\sum_{w=1}^{|W|}exp(u_w^Tv_c)})
+\end{align}
+
+当$o=w$时，梯度结果为
+\begin{align}
+\frac{\partial{CE}}{\partial{u_w}} \\
+	& = -v_c + \frac{1}{\sum_{w=1}^{W}exp(u_w^Tv_c)}\frac{\partial}{\partial{u_w}}\sum_{i=1}^{W}exp(u_i^Tv_c) \\
+& = -v_c + \frac{exp(u_w^Tv_c)}{\sum_{w=1}^{W}exp(u_w^Tv_c)}v_c \\
+& = (\widehat{y_w}-1)v_c
+\end{align}
+当$o\neq{w}$,
+\begin{align}
+\frac{\partial{CE}}{\partial{u_w}} \\
+	& = \frac{1}{\sum_{w=1}^{W}exp(u_w^Tv_c)}\frac{\partial}{\partial{u_w}}\sum_{i=1}^{W}exp(u_i^Tv_c) \\
+& = \frac{exp(u_w^Tv_c)}{\sum_{w=1}^{W}exp(u_w^Tv_c)}v_c \\
+& = \widehat{y_w}v_c
+\end{align}
+
+所以，
+\begin{align}
+\frac{\partial{CE}}{\partial{u_w}} = \left \{ 
+\begin{aligned}
+(\widehat{y_w}-1)v_c , o=w\\
+\widehat{y_w}v_c , otherwise
+\end{aligned}
+\right.
+\end{align}
+
 
 \end{document}

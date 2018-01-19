@@ -200,12 +200,44 @@ skip-gram 模型过程基本与CBOW类似，下面对该过程进行具体介绍
 在CBOW 和Skip gram 模型中，采用的方式是用生成的一种概率分布去预测词的真实分布，如何去评价模型的好坏呢？根据信息论我们知道，cross entropy是用来测度两个分布之间差异，因此在CBOW和SG模型中也采用交叉熵作为目标函数。在SG模型中，基于朴素贝叶斯假设，将预测的上下文词的联合概率分布当做独立分布去计算。这里以SG模型为主，且词窗口设定为1，则目标函数为
 $$J = H = -y_{i}log(\widehat{y_{i}}) = -log(p(u_{c}|v_c)) = -log\frac{exp(u_{c}^{T}v_{c})}{\sum_{w=1}^{|V|}exp(u_{w}^{T}v_{c})}$$
 其中，$y_i$是真是词向量，属于one-hot编码只有在下标为c处为1，而预测概率$\widehat{y}$是通过softmax而来。以上就是最终的目标函数，可以基于此目标函数对其中的输入参$v_{c}$和输出参数$u_{c}$就梯度，采用梯度下降法进行求解最优值。
-\textbf{TODO,梯度过程推导}各参数梯度求导可参考文献\href{http://shomy.top/2017/07/28/word2vec-all/}{[1]}
+各参数梯度求导可参考文献\href{http://shomy.top/2017/07/28/word2vec-all/}{[1]}
 
 
 % 4.3 
 \subsection{Negative Sampling}
+回顾一下目标函数，整个词表的大小$\emph{|V|}$ 可能会很大，每次更新都需要$O(\emph{|V|})$的时间，我们设法对它进行优化，一个直观的想法是通过采样来替代遍历整个词典。在每个训练步，通过采样一些负例来代替遍历整个词典。采样原则基于某个分布$P_{n}(w)$，它的概率值与词典中词的频率顺序相对应，换句话说就是频率高的词被采样概率越大。为了适应负采样做法我们需要调整\textbf{目标函数、梯度、更新规则}。
+Negative Sampling 是Mikolov在这篇\href{https://arxiv.org/abs/1310.4546}{Paper}中进行论述.负采样是基于Skip-gram模型，但优化的目标函数不同。给定一个词和上下文中的词构成的词对$(w,c)$，用$P(D=1|w,c)$表示词对来源于与语料库(这里语料库的意思是指w是词c的上下文词，即在同一个窗口内)，记$P(D=0|w,c)$表示词对不是来自于语料库，用sigmod函数对前一种情况进行建模
+$$P(D=1|w,c,\theta)=\sigma{(v_{c}^{T}v_w)}=\frac{1}{1+exp(-v_{c}^{T}v_w)}$$
+备注，sigmod的函数形式为
+$$\sigma{(x)}=\frac{1}{1+e^{-x}}$$
+函数图像如下，它可以看成是Softmax的1维情况
+% image
+\begin{figure}
+\centering
+\includegraphics[scale=0.8]{sigmod}
+\caption{Sigmod 函数曲线}
+\end{figure}
+根据前面的描述，我们设计一个新的目标函数，如果词和上下文来源于同一个语料库，则最大化他们来源于同一个语料库的概率，如果不是，则最大化他们不是来源于同一个语料库的概率，即最小化来源于同一语料库的概率。我们采用极大似然函数法来表示这两个概率，用$\theta$来表示模型参数即输入矩阵$V和U$。
+% equation
+\begin{align}
+\theta &= argmax_{\theta}\prod_{(w,c) \in D}P(D=1|w,c,\theta)\prod_{(w,c) \in \widetilde{D}}P(D=0|w,c,\theta) \\
+&= argmax_{\theta}\prod_{(w,c) \in D}P(D=1|w,c,\theta) \prod_{(w,c) \in \widetilde{D}}(1-P(D=1|w,c,\theta)) \\
+&= argmax_{\theta}\Sigma_{(w,c) \in D}log P(D=1|w,c,\theta) + \Sigma_{(w,c) \in \widetilde{D}}log(1-P(D=1|w,c,\theta))
+\end{align}
+最大化似然函数等价于最小化负似然函数。
+$$J = - \Sigma_{(w.c) \in D}log{\frac{1}{1+exp(-u_{w}^{T}v_c)}} - \Sigma_{(w,c) \in \widetilde{D}}log{\frac{1}{1+exp(u_{w}^Tv_c)}}$$
+其中$\widetilde{D}$是指错误的或者负采样的语料库，比如句子“"stock boil fish is toy”，不能合理组成一个句子，因此它的概率会很低，因此可以通过从词典中随机负例采样构建语料库$\widetilde{D}$。对于skip-gram模型，给定中心词c，那上下文词c-m+j的目标函为
+$$-log\sigma{(u_{c-m+j}^{T}\cdot{\widehat{v}})}-\Sigma_{k=1}^{K}log\sigma{(-\widetilde{u}_{k}^{T}\cdot{v_c})}$$
+与原始skip-gram模型softmax loss对比
+$$-u_{c-m+j}^{T}v_{c}+log\Sigma_{k=1}^{|V|}exp(u_{k}^{T}v_c)$$
 
+对于CBOW模型，给定上下文词$\widehat{v}=\frac{v_{c-m}+v_{c-m+1}+...+v_{c+m}}{2m}$对应的中心词$u_c$的目标函数为
+$$-log\sigma{(u_{c}^{T}\cdot{\widehat{v}})}-\Sigma_{k=1}^{K}log\sigma{(-\widetilde{u}_{k}^{T}\cdot{\widehat{v}})}$$
+
+原始CBOW softmax loss为：
+$$-u_{c}^{T}\widehat{v}+log\Sigma_{j=1}^{|V|}exp{(u_{j}^{T}\widehat{v})} $$
+
+从改进的目标函数和原目标函数对比，可恶意发现，新的损失函数有两点改进 一是遍历从1 to $|V|$ 调整到 1 to K，K远远小于词典大小；第二点是用sigmod代替exp加快计算。
 % 4.4
 \subsection{Hierarchical Softmax}
 
