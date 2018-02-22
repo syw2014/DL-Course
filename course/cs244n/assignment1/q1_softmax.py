@@ -31,22 +31,19 @@ def softmax(x):
     if len(x.shape) > 1:
         # Matrix
         ### YOUR CODE HERE
-        # axis =1 ,means find the maximum by row
-        # print(np.max(x, axis=1))
-        x_max = np.max(x, axis=1)
-        ### important, you should make the row of x_max vector the same as x
-        x_e = np.exp(x - x_max.reshape(x.shape[0], 1))
-        x_sum = np.sum(x_e, axis=1)
-        # print("x_e shape=", x_e.shape, "x_sum shape=", x_sum.shape)
-        x = x_e / x_sum.reshape(x.shape[0], 1)
+        x = x - np.vstack(np.amin(x, axis=1))
+        expsum = np.sum(np.exp(x), axis=1)
+        expsum = expsum.reshape(x.shape[0], 1)
+        x = np.divide(np.exp(x), expsum)
+
         # raise NotImplementedError
         ### END YOUR CODE
     else:
         # Vector
         ### YOUR CODE HERE
-        x_e = np.exp(x - np.max(x))
-        # print(np.max(x))
-        x = x_e / np.sum(x_e)
+        x = x - min(x)
+
+        x = np.exp(x) / np.sum(np.exp(x))
         # raise NotImplementedError
         ### END YOUR CODE
 

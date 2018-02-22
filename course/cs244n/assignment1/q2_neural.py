@@ -24,6 +24,7 @@ def forward_backward_prop(data, labels, params, dimensions):
     """
 
     ### Unpack network parameters (do not modify)
+    # print("Input parameters:{}".format(params))
     ofs = 0
     Dx, H, Dy = (dimensions[0], dimensions[1], dimensions[2])
 
@@ -36,16 +37,32 @@ def forward_backward_prop(data, labels, params, dimensions):
     b2 = np.reshape(params[ofs:ofs + Dy], (1, Dy))
 
     ### YOUR CODE HERE: forward propagation
-    hidden_result = np.matmul(data, W1) + b1
-    output = np.matmul(sigmoid(hidden_result), W2) + b2
+    h1 = np.dot(data, W1) + b1
+    a1 = sigmoid(h1)
+    output = np.dot(a1, W2) + b2
     score = softmax(output)
-    cost = -np.sum(np.log(score) * labels)
+    cost = - np.sum(np.log(score) * labels)
     ### END YOUR CODE
 
     ### YOUR CODE HERE: backward propagation
-    
-    ### END YOUR CODE
 
+    # gradient of W2 = dJ / doutput * doutput / dW2
+    # dJ/doutput = delta = score - labels
+    delta = score - labels
+    gradW2 = a1.T.dot(delta)
+
+    # gradient of b2_i = dJ/db_i = delta_i
+    gradb2 = np.sum(delta, axis=0)
+
+    # gradient of W1 = dJ/doutput * doutput/da1 * da1/dh1 * dh1/dW1
+    delta = delta.dot(W2.T) * sigmoid_grad(a1)
+    gradW1 = data.T.dot(delta)
+
+    # gradient of b1
+    gradb1 = np.sum(delta, axis=0)
+
+    ### END YOUR CODE
+    print(gradW1.shape)
     ### Stack gradients (do not modify)
     grad = np.concatenate((gradW1.flatten(), gradb1.flatten(),
         gradW2.flatten(), gradb2.flatten()))
@@ -89,4 +106,4 @@ def your_sanity_checks():
 
 if __name__ == "__main__":
     sanity_check()
-    your_sanity_checks()
+    # your_sanity_checks()
