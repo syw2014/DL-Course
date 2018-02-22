@@ -238,11 +238,85 @@ $$-log\sigma{(u_{c}^{T}\cdot{\widehat{v}})}-\Sigma_{k=1}^{K}log\sigma{(-\widetil
 $$-u_{c}^{T}\widehat{v}+log\Sigma_{j=1}^{|V|}exp{(u_{j}^{T}\widehat{v})} $$
 
 从改进的目标函数和原目标函数对比，可恶意发现，新的损失函数有两点改进 一是遍历从1 to $|V|$ 调整到 1 to K，K远远小于词典大小；第二点是用sigmod代替exp加快计算。
+在上面的公式中，$\{\widetilde{u}_k|k=1...K\}$是从$P_n(w)$中进行采样得到，那$P_n(w)$应该是什么样子呢？通常认为最好的分布是基于Unigram Model分布的3/4次幂，为什么是3/4呢？从下面的例子来理解，
+% 
+\begin{align}
+is： 0.9^{3/4} = 0.92 \\
+Constitution: 0.09^{3/4} = 0.16 \\
+bombastic：0.01^{3/4} = 0.032
+\end{align}
+其实3/4次幂可以看做是一种平滑技术，因为在进行负采样的时候遵循一个原则，频率高的词被采样的概率高，为了均衡照顾那些频率低的词，所以采用0.75次幂进行提升他们的概率值，同时频率高的词对应的采样概率被稍微降低些。
+这种负采样实现的基本思路是，对于一个长度为1的线段，按照每个词的词频将其公平的分配给每个词，每个词分得到长度为：
+\begin{align}
+len(w)=\frac{Counter(w)}{\Sigma_{u \in D}Counter(u)}
+\end{align}
+其中counter(w)即是每个词的词频。通过这个式子，我们只需要在0-1直接产生一个随机小数，看其落在线段上的那个区间，就能采样到对应的单词，在word2vec中为了加速计算，通过查表方式实现。将上述线段标上M个“刻度”，刻度之间间隔是相等的，即1/M，现在只需要生成一个0-M间的整数，然后在刻度上查找就可以找到采样的单词，word2vec源码实现中有很多trick来来加速预算。
 % 4.4
 \subsection{Hierarchical Softmax}
+Mikolov在这篇中同时也介绍了另外一个优化普通softmax的方法即使hierarchical softmax，分层softmax。在实践中，hierarchical softmax对罕见词有较好的效果，而negative sampling对高频词有较好的效果。
+Hierarchical softmax采用一个二叉树来表示词典中所有词。每一个叶子节点都代表一个词，从根节点到leaf节点只有唯一一条路径，这个路径被定义为每个词的概率，图中除去根节点和叶子节点以外的节点，都是一个需要模型学习的向量。当用Hierarchical softamx时，整个模型中每个词只有输入表示，而不像原始模型中那样也具有输出表示。下图是Hierarchical softmax二叉树的一个示例。
+% image
+\begin{figure}
+\centering
+\includegraphics[scale=0.8]{hierarchical}
+\caption{Hierarchical softmax二叉树示例}
+\end{figure}
+在这个模型中，当给定一个向量$w_i$和$P(w|w_i)$时，词w的概率就等于从根节点出发随机游走到与w相关的叶子节点的概率。由于采用二叉树结构，所有模型计算复杂度从最初的$O(|V|)$变成$O(log(|V|))$.
+为了进一步介绍该模型，引入一下记号，
+% list
+\begin{itemize}
+\item $L(w)$ 表示从根节点root到叶子节点w路径上所经过的节点个数，比如上图中$L(w_2)=3$。
+
+\item $n(w,i)$ 表示从root到叶子节点w路径上与向量$v_{n(w,i)}$相关的第$i-th$个节点。比如$n(w,1)$表示与$v_{n(w,1)}$相关的第1个节点，其实就是root节点，而$n(w,L(w))$就是与$v_{n(w,L(w))}$相关的第$L(w)$个节点，也即是词w的父节点。
+
+\item $ch(n)$ 表示任意内部节点(出根节点和叶子节点以为的节点)n的任意一个孩子节点(通常指左节点)
+\end{itemize}
+下面来计算概率，
+% equation
+\begin{align}
+P(w|w_i) = \prod_{j=1}^{L(w)-1} \sigma{([n(w,j+1) = ch(n(w,j))] \cdot v_{n(w,j)}^Tv_{w_i})}
+\end{align}
+
+其中，
+% 大括号
+$$[x] = \left \{ 
+\begin{aligned}
+1	,if x is true \\
+-1	,otherwise
+\end{aligned}
+\right.
+$$
+$\sigma(\cdot)$表示sigmoid 函数。
+下面具体解释上面概率公式的含义。首先我们计算从$root(n(w,1))$到叶子节点$leaf(w)$路径上所有词的乘积，如果假定ch(n)是节点n的左子节点，那么当路径转向左侧是term$[n(w,j+1) = ch(n(w,j))]$返回1，因为$ch(n(w,j))$表示的是路径上第j个节点的左子节点，$n(w,j+1)$表示这条路径上第j+1个节点，那么他们表示相同的节点；否则term结果为-1，表示转向右子树。
+进一步来说，term$[n(w,j+1) = ch(n(w,j))]$提供了一个归一化操作，对于任意一个节点n，把他的所有做子节点和右节点的概率加在一起，对于任意的$v_{n}^{T}v_{w_i}$有
+\begin{align}
+\sigma(v_{n}^{T}v_{w_i}) + \sigma(-v_{n}^{T}v_{w_i}) = 1
+\end{align}
+同时该归一化也保证了$\Sigma_{w=1}^{|V|}P(w|w_i)=1$。
+
+最后来比较一个输入向量$v_{w_i}$和内部节点向量$v_{n(w,j)}^{T}$之间的点积相似度。拿图4中的$w_2$为例，从根节点出发为了到达$w_2$需要两次转向左节点，1次转向右节点，那么得到
 
 
+\begin{align}
+ P(w_2|w_i) & =p(n(w_2,1),left)\cdot p(n(w_2,2),left) \cdot p(n(w_2,3),right)  \\
+&= \sigma(v_{n(w_2,1)}^{T}v_{w_i}) \cdot \sigma(v_{n(w_2,2)}^{T}v_{w_i}) \cdot \sigma(-v_{n(w_2,3)}^{T}v_{w_i})
+\end{align}
 
+为了训练这个模型，我们的目标依然是最小化负对数似然函数$-logP(w|w_i)$，但是我们只需要更新在二叉树中从根节点到叶子节点路径上的节点的向量即可，而不需要更新每个词的输出向量。这个方法的速度取决于如何构建二叉树及如何用叶子节点表示每个词，在MIKOLOV的论文中使用的是Huffman树，它的特点是频率越高的词在树中路径越短。
 
+\section{参考文献}
+
+[Bengio et al., 2003] Bengio, Y., Ducharme, R., Vincent, P., and Janvin, C. (2003). A
+neural probabilistic language model. J. Mach. Learn. Res., 3:1137–1155.
+[Collobert et al., 2011] Collobert, R., Weston, J., Bottou, L., Karlen, M., Kavukcuoglu,
+K., and Kuksa, P. P. (2011). Natural language processing (almost) from scratch.
+CoRR, abs/1103.0398.
+[Mikolov et al., 2013] Mikolov, T., Chen, K., Corrado, G., and Dean, J. (2013). Efficient
+estimation of word representations in vector space. CoRR, abs/1301.3781.
+[Rong, 2014] Rong, X. (2014). word2vec parameter learning explained. CoRR,
+abs/1411.2738.
+[Rumelhart et al., 1988] Rumelhart, D. E., Hinton, G. E., and Williams, R. J. (1988).
+Neurocomputing: Foundations of research. chapter Learning Representations by
+Back-propagating Errors, pages 696–699. MIT Press, Cambridge, MA, USA.
 
 \end{document}
