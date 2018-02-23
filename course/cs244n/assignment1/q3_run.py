@@ -61,7 +61,7 @@ covariance = 1.0 / len(visualizeIdx) * temp.T.dot(temp)
 U,S,V = np.linalg.svd(covariance)
 coord = temp.dot(U[:,0:2])
 
-for i in xrange(len(visualizeWords)):
+for i in range(len(visualizeWords)):
     plt.text(coord[i,0], coord[i,1], visualizeWords[i],
         bbox=dict(facecolor='green', alpha=0.1))
 
